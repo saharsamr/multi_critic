@@ -36,7 +36,7 @@ class Task:
                 win=self.win,
                 nElements=self.n_dots,
                 elementTex=None,
-                elementMask="circle",
+                elementMask="gauss",
                 xys=[dot.xy for dot in self.dots],
                 sizes=10
             ).draw()
@@ -70,6 +70,10 @@ class Task:
         return event.waitKeys(keyList=["left", "right"])
 
     def get_confidence(self):
+        visual.TextStim(
+            self.win,
+            text='rate your confidence on previous trial from 1 to 6',
+            pos=[200, 200], color=black).draw()
         visual.TextStim(self.win, text='1', pos=[250, -100], color=black).draw()
         visual.TextStim(self.win, text='2', pos=[350, -100], color=black).draw()
         visual.TextStim(self.win, text='3', pos=[450, -100], color=black).draw()
