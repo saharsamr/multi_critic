@@ -58,12 +58,12 @@ class Display:
         ).draw()
         visual.ImageStim(
             self.win,
-            image='/Users/sadegh/Desktop/multi-critic/images/arrow_key.jpg',
+            image='/Users/sadegh/Desktop/multi-critic/images/arrow_key.png',
             size=100, ori=90.0, pos=[200, -100]
         ).draw()
         visual.ImageStim(
             self.win,
-            image='/Users/sadegh/Desktop/multi-critic/images/arrow_key.jpg',
+            image='/Users/sadegh/Desktop/multi-critic/images/arrow_key.png',
             size=100, ori=270.0, pos=[-200, -100]
         ).draw()
         self.win.flip()
