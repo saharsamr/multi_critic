@@ -8,7 +8,7 @@ black = [-1, -1, -1]
 white = [1, 1, 1]
 
 
-class Task:
+class Display:
     def __init__(self, n_trials=100 ,scr_size=(800, 800), n_dots=200, max_step_size=10):
         self.n_trials = n_trials
         self.n_dots = n_dots
@@ -27,7 +27,7 @@ class Task:
     def fixation(self):
         visual.TextStim(win=self.win, text="+", color=[0, 1, 0], pos=[500, 0]).draw()
         self.win.flip()
-        Task.delay(0.5)
+        Display.delay(0.5)
 
     def random_dot_motion(self):
         clock = core.Clock()
