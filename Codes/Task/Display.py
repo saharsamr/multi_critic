@@ -5,8 +5,8 @@ from Codes.Task.Utils.Directions import Dir
 from Codes.Task.Tracker import Tracker
 
 
-black = [-1, -1, -1]
-white = [1, 1, 1]
+BLACK = [-1, -1, -1]
+WHITE = [1, 1, 1]
 
 
 class Display:
@@ -82,13 +82,13 @@ class Display:
         visual.TextStim(
             self.win,
             text='rate your confidence on previous trial from 1 to 6',
-            pos=[200, 200], color=black).draw()
-        visual.TextStim(self.win, text='1', pos=[250, -100], color=black).draw()
-        visual.TextStim(self.win, text='2', pos=[350, -100], color=black).draw()
-        visual.TextStim(self.win, text='3', pos=[450, -100], color=black).draw()
-        visual.TextStim(self.win, text='4', pos=[550, -100], color=black).draw()
-        visual.TextStim(self.win, text='5', pos=[650, -100], color=black).draw()
-        visual.TextStim(self.win, text='6', pos=[750, -100], color=black).draw()
+            pos=[200, 200], color=BLACK).draw()
+        visual.TextStim(self.win, text='1', pos=[250, -100], color=BLACK).draw()
+        visual.TextStim(self.win, text='2', pos=[350, -100], color=BLACK).draw()
+        visual.TextStim(self.win, text='3', pos=[450, -100], color=BLACK).draw()
+        visual.TextStim(self.win, text='4', pos=[550, -100], color=BLACK).draw()
+        visual.TextStim(self.win, text='5', pos=[650, -100], color=BLACK).draw()
+        visual.TextStim(self.win, text='6', pos=[750, -100], color=BLACK).draw()
         self.win.flip()
         return event.waitKeys(keyList=["1", "2", "3", "4", "5", "6"])
 
