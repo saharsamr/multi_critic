@@ -17,6 +17,7 @@ class Display:
         self.n_dots = n_dots
         self.max_step_size = max_step_size
         self.win = visual.Window(size=scr_size, units="pix", fullscr=False)
+        self.tracker = Tracker(n_trials)
 
     def run_task(self):
         self.user_info_page()
@@ -28,13 +29,13 @@ class Display:
             selected = self.select_direction()
             confidence = self.get_confidence()
             self.send_to_tracker(selected[0], confidence[0])
+        self.tracker.save()
 
     def send_to_tracker(self, selected, confidence):
-        trial_track = Tracker(self.n_trials)
         answer = Tracker.majority_voting(self.dots)
         selected = Dir.Right if selected == "right" else Dir.Left
         confidence = int(confidence)
-        trial_track.add_trial_info(answer, selected, confidence)
+        self.tracker.add_trial_info(answer, selected, confidence)
 
     def fixation(self):
         visual.TextStim(win=self.win, text="+", color=[0, 1, 0], pos=[500, 0]).draw()
@@ -104,7 +105,7 @@ class Display:
         user_page.addField('Gender:', choices=['Male', 'Female', 'Other'])
         data = user_page.show()
         if user_page.OK:
-            Tracker.add_user_info(data[0], data[1], data[2], data[3])
+            self.tracker.add_user_info(data[0], data[1], data[2], data[3])
         else:
            sys.exit()
 

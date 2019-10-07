@@ -1,5 +1,6 @@
 from Codes.Task.Utils.Directions import Dir
 from Codes.Task.Utils.Genders import Gender
+from Codes.Task.Logger import Logger
 
 class Ttrial_info:
     def __init__(self, correct_answer, user_answer, user_confidence):
@@ -31,6 +32,9 @@ class Tracker:
 
     def add_trial_info(self, correct_answer, user_answer, user_confidence):
         self.trials_info.append(Ttrial_info(correct_answer, user_answer, user_confidence))
+
+    def save(self):
+        Logger.write_per_user_data(self)
 
     @staticmethod
     def majority_voting(dots):
