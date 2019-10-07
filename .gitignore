@@ -125,5 +125,4 @@ dmypy.json
 .pyre/
 multi_critic/*
 .idea/*
-images/*
 Data/*
