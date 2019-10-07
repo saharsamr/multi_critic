@@ -1,4 +1,5 @@
 from Codes.Task.Utils.Directions import Dir
+from Codes.Task.Utils.Genders import Gender
 
 class Ttrial_info:
     def __init__(self, correct_answer, user_answer, user_confidence):
@@ -6,10 +7,27 @@ class Ttrial_info:
         self.user_answer = user_answer
         self.user_confidence = user_confidence
 
+class User_info:
+    def __init__(self, first_name, last_name, age, gender):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+        self.gender = gender
+
 class Tracker:
     def __init__(self, n_trials):
+        self.user_info = None
         self.n_trials = n_trials
         self.trials_info = []
+
+    def add_user_info(self, first_name, last_name, age, gender):
+        if gender == "Male":
+            gender = Gender.Male
+        elif gender == "Female":
+            gender = Gender.Female
+        else:
+            gender = Gender.Other
+        self.user_info = User_info(first_name, last_name, age, gender)
 
     def add_trial_info(self, correct_answer, user_answer, user_confidence):
         self.trials_info.append(Ttrial_info(correct_answer, user_answer, user_confidence))

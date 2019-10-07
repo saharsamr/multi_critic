@@ -1,4 +1,6 @@
 import random
+import sys
+from psychopy import gui
 from psychopy import visual, event, core
 from Codes.Task.Objects.Dot import Dot
 from Codes.Task.Utils.Directions import Dir
@@ -17,6 +19,7 @@ class Display:
         self.win = visual.Window(size=scr_size, units="pix", fullscr=False)
 
     def run_task(self):
+        self.user_info_page()
         for _ in range(self.n_trials):
             self.dots = [Dot([random.uniform(-400, 400), random.uniform(-400, 400)])
                          for _ in range(self.n_dots)]
@@ -91,6 +94,19 @@ class Display:
         visual.TextStim(self.win, text='6', pos=[750, -100], color=BLACK).draw()
         self.win.flip()
         return event.waitKeys(keyList=["1", "2", "3", "4", "5", "6"])
+
+    def user_info_page(self):
+        user_page = gui.Dlg(title="please enter your info:")
+        user_page.addText('Subject info')
+        user_page.addField('First Name:')
+        user_page.addField('Last Name:')
+        user_page.addField('Age:')
+        user_page.addField('Gender:', choices=['Male', 'Female', 'Other'])
+        data = user_page.show()
+        if user_page.OK:
+            Tracker.add_user_info(data[0], data[1], data[2], data[3])
+        else:
+           sys.exit()
 
     @staticmethod
     def delay(ms):
