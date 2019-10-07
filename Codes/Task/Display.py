@@ -2,6 +2,7 @@ import random
 from psychopy import visual, event, core
 from Codes.Task.Objects.Dot import Dot
 from Codes.Task.Utils.Directions import Dir
+from Codes.Task.Tracker import Tracker
 
 
 black = [-1, -1, -1]
@@ -21,8 +22,16 @@ class Display:
                          for _ in range(self.n_dots)]
             self.fixation()
             self.random_dot_motion()
-            self.select_direction()
-            self.get_confidence()
+            selected = self.select_direction()
+            confidence = self.get_confidence()
+            self.send_to_tracker(selected[0], confidence[0])
+
+    def send_to_tracker(self, selected, confidence):
+        trial_track = Tracker(self.n_trials)
+        answer = Tracker.majority_voting(self.dots)
+        selected = Dir.Right if selected == "right" else Dir.Left
+        confidence = int(confidence)
+        trial_track.add_trial_info(answer, selected, confidence)
 
     def fixation(self):
         visual.TextStim(win=self.win, text="+", color=[0, 1, 0], pos=[500, 0]).draw()
