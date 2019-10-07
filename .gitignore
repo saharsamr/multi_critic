@@ -126,3 +126,4 @@ dmypy.json
 multi_critic/*
 .idea/*
 images/*
+Data/*
