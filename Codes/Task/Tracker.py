@@ -1,6 +1,7 @@
 from Codes.Task.Utils.Directions import Dir
 from Codes.Task.Utils.Genders import Gender
 from Codes.Task.Logger import Logger
+from Codes.Task.Utils.GlobalValues import N_TRIALS, BLOCK_SIZE
 
 class Ttrial_info:
     def __init__(self, correct_answer, user_answer, user_confidence):
@@ -16,10 +17,10 @@ class User_info:
         self.gender = gender
 
 class Tracker:
-    def __init__(self, n_trials, block_size):
+    def __init__(self):
         self.user_info = None
-        self.n_trials = n_trials
-        self.block_size = block_size
+        self.n_trials = N_TRIALS
+        self.block_size = BLOCK_SIZE
         self.trials_info = []
 
     def add_user_info(self, first_name, last_name, age, gender):

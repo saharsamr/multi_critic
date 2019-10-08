@@ -5,21 +5,18 @@ from psychopy import visual, event, core
 from Codes.Task.Objects.Dot import Dot
 from Codes.Task.Utils.Directions import Dir
 from Codes.Task.Tracker import Tracker
-from Codes.Task.Utils.GlobalValues import PATH
-
-
-BLACK = [-1, -1, -1]
-WHITE = [1, 1, 1]
+from Codes.Task.Utils.GlobalValues import PATH, \
+    BLACK, WHITE, GREEN, STAIR_STEP
 
 
 class Display:
-    def __init__(self, n_trials=100 ,scr_size=(800, 800), n_dots=200, max_step_size=10, right_prob=0.5):
+    def __init__(self, right_prob, n_trials ,scr_size=(800, 800), n_dots=200, max_step_size=10):
         self.n_trials = n_trials
         self.n_dots = n_dots
         self.max_step_size = max_step_size
         self.right_prob = right_prob
         self.win = visual.Window(size=scr_size, units="pix", fullscr=False, color=WHITE)
-        self.tracker = Tracker(n_trials)
+        self.tracker = Tracker()
 
     def run_task(self):
         self.user_info_page()
@@ -31,7 +28,7 @@ class Display:
             selected = self.select_direction()
             confidence = self.get_confidence()
             self.send_to_tracker(selected[0], confidence[0])
-            self.tracker.staircase(0.02, self)
+            self.tracker.staircase(STAIR_STEP, self)
         self.tracker.save()
 
     def send_to_tracker(self, selected, confidence):
@@ -41,7 +38,7 @@ class Display:
         self.tracker.add_trial_info(answer, selected, confidence)
 
     def fixation(self):
-        visual.TextStim(win=self.win, text="+", color=[0, 1, 0], pos=[500, 0]).draw()
+        visual.TextStim(win=self.win, text="+", color=GREEN, pos=[500, 0]).draw()
         self.win.flip()
         Display.delay(0.5)
 
