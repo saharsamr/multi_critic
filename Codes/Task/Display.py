@@ -13,23 +13,25 @@ WHITE = [1, 1, 1]
 
 
 class Display:
-    def __init__(self, n_trials=100 ,scr_size=(800, 800), n_dots=200, max_step_size=10):
+    def __init__(self, n_trials=100 ,scr_size=(800, 800), n_dots=200, max_step_size=10, right_prob=0.5):
         self.n_trials = n_trials
         self.n_dots = n_dots
         self.max_step_size = max_step_size
+        self.right_prob = right_prob
         self.win = visual.Window(size=scr_size, units="pix", fullscr=False, color=WHITE)
         self.tracker = Tracker(n_trials)
 
     def run_task(self):
         self.user_info_page()
         for _ in range(self.n_trials):
-            self.dots = [Dot([random.uniform(-400, 400), random.uniform(-400, 400)])
+            self.dots = [Dot([random.uniform(-400, 400), random.uniform(-400, 400)], right_prob=self.right_prob)
                          for _ in range(self.n_dots)]
             self.fixation()
             self.random_dot_motion()
             selected = self.select_direction()
             confidence = self.get_confidence()
             self.send_to_tracker(selected[0], confidence[0])
+            self.tracker.staircase(0.02, self)
         self.tracker.save()
 
     def send_to_tracker(self, selected, confidence):
@@ -110,6 +112,9 @@ class Display:
             self.tracker.add_user_info(data[0], data[1], data[2], data[3])
         else:
            sys.exit()
+
+    def change_right_probability(self, diff):
+        self.right_prob += diff
 
     @staticmethod
     def delay(ms):
