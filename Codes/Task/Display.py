@@ -5,54 +5,104 @@ from psychopy import visual, event, core
 from Codes.Task.Objects.Dot import Dot
 from Codes.Task.Utils.Directions import Dir
 from Codes.Task.Tracker import Tracker
-from Codes.Task.Utils.GlobalValues import PATH, \
-    BLACK, WHITE, GREEN, STAIR_STEP
+from Codes.Task.Rewarder import Rewarder
+from Codes.Task.Utils.GlobalValues import IMAGE_PATH, \
+    BLACK, WHITE, GREEN, STAIR_STEP, RIGHT_PROB, \
+    FIXATION_DELAY, STIMULUS_TIME, STARTING_DIR_PROB, \
+    N_TEST_TRIALS, REWARD_DELAY, STIMULI_RADIUS
 
 
 class Display:
-    def __init__(self, right_prob, n_trials ,scr_size=(800, 800), n_dots=200, max_step_size=10):
+    def __init__(self, one_direction_prob, n_trials, n_test_trials, n_dots=400, move_diff=10):
         self.n_trials = n_trials
+        self.n_test_trials = n_test_trials
         self.n_dots = n_dots
-        self.max_step_size = max_step_size
-        self.right_prob = right_prob
-        self.win = visual.Window(size=scr_size, units="pix", fullscr=False, color=WHITE)
+        self.move_diff = move_diff
+        self.one_direction_prob = one_direction_prob
+        self.win = None
         self.tracker = Tracker()
+        self.dots = []
+        self.starting_dir_prob = STARTING_DIR_PROB
+        self.central_circle = None
+        self.starting_pos = None
 
     def run_task(self):
         self.user_info_page()
-        for _ in range(self.n_trials):
-            self.dots = [Dot([random.uniform(-400, 400), random.uniform(-400, 400)], right_prob=self.right_prob)
-                         for _ in range(self.n_dots)]
-            self.fixation()
-            self.random_dot_motion()
-            selected = self.select_direction()
-            confidence = self.get_confidence()
-            self.send_to_tracker(selected[0], confidence[0])
-            self.tracker.staircase(STAIR_STEP, self)
+        self.win = visual.Window(fullscr=True, units="pix", color=BLACK)
+        self.central_circle = visual.Circle(self.win, lineColor='white', lineWidth=4., radius=STIMULI_RADIUS)
+        self.testing_phase()
+        self.training_phase()
+        self.testing_phase()
         self.tracker.save()
 
-    def send_to_tracker(self, selected, confidence):
-        answer = Tracker.majority_voting(self.dots)
+    def testing_phase(self):
+        for _ in range(self.n_test_trials):
+            self.run_trial()
+        self.starting_dir_prob = self.tracker.get_training_start_dir_prob()
+
+    def training_phase(self):
+        for indx in range(self.n_trials):
+            self.run_trial()
+            self.give_reward(N_TEST_TRIALS+indx)
+
+    def run_trial(self):
+        trial_direction = Dir.Right if random.random() < RIGHT_PROB else Dir.Left
+        self.dots = [
+            Dot([random.uniform(-150, 150), random.uniform(-150, 150)], one_direction_prob=self.one_direction_prob,
+                selected_dir=trial_direction) for _ in range(self.n_dots)
+        ]
+        self.starting_pos = [dot.xy for dot in self.dots]
+        self.fixation()
+        self.random_dot_motion()
+        selected = self.select_direction()
+        confidence = self.get_confidence()
+        self.send_to_tracker(selected[0], confidence[0], self.one_direction_prob)
+        self.tracker.staircase(STAIR_STEP, self)
+
+    def give_reward(self, trial_index):
+        trial_info = self.tracker.get_trial_info(trial_index)
+        critic = self.tracker.get_critic()
+        reward = 0
+
+        if critic == 'Performance':
+            reward = Rewarder.difficulty_reward(trial_info.one_direction_prob)
+        elif critic == 'Meta':
+            reward = Rewarder.meta_reward(
+                trial_info.user_answer, trial_info.correct_answer, trial_info.user_confidence
+            )
+        elif critic == 'Confidence':
+            reward = Rewarder.confidence_reward(trial_info.user_confidence)
+
+        visual.TextStim(win=self.win, text=str(int(reward*100)), color=GREEN, pos=[495, 0]).draw()
+        self.win.flip()
+        Display.delay(REWARD_DELAY)
+
+    def send_to_tracker(self, selected, confidence, one_direction_prob):
+        answer = Tracker.majority_voting(self.dots, self.central_circle)
         selected = Dir.Right if selected == "right" else Dir.Left
         confidence = int(confidence)
-        self.tracker.add_trial_info(answer, selected, confidence)
+        self.tracker.add_trial_info(answer, selected, confidence, one_direction_prob)
 
     def fixation(self):
-        visual.TextStim(win=self.win, text="+", color=GREEN, pos=[500, 0]).draw()
+        visual.TextStim(win=self.win, text="+", color=GREEN, pos=[495, 0]).draw()
         self.win.flip()
-        Display.delay(0.5)
+        Display.delay(FIXATION_DELAY)
 
     def random_dot_motion(self):
         clock = core.Clock()
-        while clock.getTime() < 2.0:
+        while clock.getTime() < STIMULUS_TIME:
+            self.central_circle.draw()
+            for i, dot in enumerate(self.dots):
+                dot.xy = dot.xy if self.central_circle.contains(dot.xy[0], dot.xy[1]) else self.starting_pos[i]
+            dots = [dot for dot in self.dots if self.central_circle.contains(dot.xy[0], dot.xy[1])]
             visual.ElementArrayStim(
                 win=self.win,
-                nElements=self.n_dots,
+                nElements=len(dots),
                 elementTex=None,
                 elementMask="gauss",
-                xys=[dot.xy for dot in self.dots],
-                sizes=10,
-                colors=BLACK
+                xys=[dot.xy for dot in dots],
+                sizes=15,
+                colors=WHITE,
             ).draw()
             self.win.flip()
             self.move_dots()
@@ -60,24 +110,24 @@ class Display:
     def move_dots(self):
         for dot in self.dots:
             if dot.move_direction == Dir.Right:
-                dot.xy[0] += random.random() * self.max_step_size
+                dot.xy[0] += random.random() * self.move_diff
             else:
-                dot.xy[0] -= random.random() * self.max_step_size
+                dot.xy[0] -= random.random() * self.move_diff
 
     def select_direction(self):
         visual.TextStim(
             self.win,
             text="select the direction, which most of the dots are moving forward.",
-            pos=(200,200), color=BLACK
+            pos=(200, 200), color=WHITE
         ).draw()
         visual.ImageStim(
             self.win,
-            image=PATH + 'images/arrow_key.png',
+            image=IMAGE_PATH + 'arrow_key.png',
             size=100, ori=270.0, pos=[200, -100]
         ).draw()
         visual.ImageStim(
             self.win,
-            image=PATH + 'images/arrow_key.png',
+            image=IMAGE_PATH + 'arrow_key.png',
             size=100, ori=90.0, pos=[-200, -100]
         ).draw()
         self.win.flip()
@@ -87,13 +137,13 @@ class Display:
         visual.TextStim(
             self.win,
             text='rate your confidence on previous trial from 1 to 6',
-            pos=[200, 200], color=BLACK).draw()
-        visual.ImageStim(self.win, image=PATH + 'images/1.png', pos=[-280, -100], size=100).draw()
-        visual.ImageStim(self.win, image=PATH + 'images/2.png', pos=[-170, -100], size=100).draw()
-        visual.ImageStim(self.win, image=PATH + 'images/3.png', pos=[-60, -100], size=100).draw()
-        visual.ImageStim(self.win, image=PATH + 'images/4.png', pos=[50, -100], size=100).draw()
-        visual.ImageStim(self.win, image=PATH + 'images/5.png', pos=[160, -100], size=100).draw()
-        visual.ImageStim(self.win, image=PATH + 'images/6.png', pos=[270, -100], size=100).draw()
+            pos=[200, 200], color=WHITE).draw()
+        visual.ImageStim(self.win, image=IMAGE_PATH + '1.png', pos=[-280, -100], size=100).draw()
+        visual.ImageStim(self.win, image=IMAGE_PATH + '2.png', pos=[-170, -100], size=100).draw()
+        visual.ImageStim(self.win, image=IMAGE_PATH + '3.png', pos=[-60, -100], size=100).draw()
+        visual.ImageStim(self.win, image=IMAGE_PATH + '4.png', pos=[50, -100], size=100).draw()
+        visual.ImageStim(self.win, image=IMAGE_PATH + '5.png', pos=[160, -100], size=100).draw()
+        visual.ImageStim(self.win, image=IMAGE_PATH + '6.png', pos=[270, -100], size=100).draw()
         self.win.flip()
         return event.waitKeys(keyList=["1", "2", "3", "4", "5", "6"])
 
@@ -104,14 +154,18 @@ class Display:
         user_page.addField('Last Name:')
         user_page.addField('Age:')
         user_page.addField('Gender:', choices=['Male', 'Female', 'Other'])
+        user_page.addField('Critic:', choices=['Performance', 'Meta', 'Confidence'])
         data = user_page.show()
         if user_page.OK:
-            self.tracker.add_user_info(data[0], data[1], data[2], data[3])
+            self.tracker.add_user_info(data[0], data[1], data[2], data[3], data[4])
         else:
            sys.exit()
 
-    def change_right_probability(self, diff):
-        self.right_prob += diff
+    def change_dir_probability(self, diff):
+        if diff < 0:
+            self.one_direction_prob = max(self.one_direction_prob + diff, 0.54)
+        else:
+            self.one_direction_prob += diff
 
     @staticmethod
     def delay(ms):

@@ -1,4 +1,5 @@
-PATH = "/Users/sadegh/Desktop/multi-critic/Data/"
+PATH = "/Users/sadegh/Desktop/multi_critic/Data/"
+
 
 class Logger:
     @staticmethod

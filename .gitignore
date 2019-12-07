@@ -126,3 +126,6 @@ dmypy.json
 multi_critic/*
 .idea/*
 Data/*
+*.DS_Store*
+*node_modules/
+*package-lock.json
