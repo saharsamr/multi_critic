@@ -1,5 +1,6 @@
 import random
 import sys
+from copy import deepcopy
 from psychopy import gui
 from psychopy import visual, event, core
 from Codes.Task.Objects.Dot import Dot
@@ -24,7 +25,6 @@ class Display:
         self.dots = []
         self.starting_dir_prob = STARTING_DIR_PROB
         self.central_circle = None
-        self.starting_pos = None
 
     def run_task(self):
         self.user_info_page()
@@ -46,18 +46,26 @@ class Display:
             self.give_reward(N_TEST_TRIALS+indx)
 
     def run_trial(self):
-        trial_direction = Dir.Right if random.random() < RIGHT_PROB else Dir.Left
-        self.dots = [
-            Dot([random.uniform(-150, 150), random.uniform(-150, 150)], one_direction_prob=self.one_direction_prob,
-                selected_dir=trial_direction) for _ in range(self.n_dots)
-        ]
-        self.starting_pos = [dot.xy for dot in self.dots]
+        self.initial_dots()
         self.fixation()
         self.random_dot_motion()
         selected = self.select_direction()
         confidence = self.get_confidence()
         self.send_to_tracker(selected[0], confidence[0], self.one_direction_prob)
         self.tracker.staircase(STAIR_STEP, self)
+
+    def initial_dots(self):
+        trial_direction = Dir.Right if random.random() < RIGHT_PROB else Dir.Left
+        self.dots = []
+        for _ in range(self.n_dots):
+            x, y = self.renew_dot()
+            self.dots.append(Dot([x, y], one_direction_prob=self.one_direction_prob, selected_dir=trial_direction))
+
+    def renew_dot(self):
+        while True:
+            x, y = random.uniform(-150, 150), random.uniform(-150, 150)
+            if self.central_circle.contains(x, y):
+                return [x, y]
 
     def give_reward(self, trial_index):
         trial_info = self.tracker.get_trial_info(trial_index)
@@ -93,14 +101,14 @@ class Display:
         while clock.getTime() < STIMULUS_TIME:
             self.central_circle.draw()
             for i, dot in enumerate(self.dots):
-                dot.xy = dot.xy if self.central_circle.contains(dot.xy[0], dot.xy[1]) else self.starting_pos[i]
-            dots = [dot for dot in self.dots if self.central_circle.contains(dot.xy[0], dot.xy[1])]
+                # TODO: what to do? what not to do?
+                dot.xy = dot.xy if self.central_circle.contains(dot.xy[0], dot.xy[1]) else self.renew_dot()
             visual.ElementArrayStim(
                 win=self.win,
-                nElements=len(dots),
+                nElements=self.n_dots,
                 elementTex=None,
                 elementMask="gauss",
-                xys=[dot.xy for dot in dots],
+                xys=[dot.xy for dot in self.dots],
                 sizes=15,
                 colors=WHITE,
             ).draw()
