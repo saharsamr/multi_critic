@@ -30,9 +30,14 @@ class Display:
         self.user_info_page()
         self.win = visual.Window(fullscr=True, units="pix", color=BLACK)
         self.central_circle = visual.Circle(self.win, lineColor='white', lineWidth=4., radius=STIMULI_RADIUS)
+        self.description_page("Press Space when you are ready")
         self.testing_phase()
+        self.description_page("From now, you will receive rewards, Press space when you are ready to start this part")
         self.training_phase()
+        self.description_page("Here is the last part. you won't receive rewards any more, Press space to start")
         self.testing_phase()
+        visual.TextStim(win=self.win, text="thanks :)", color=GREEN, pos=[495, 0]).draw()
+        self.win.flip()
         self.tracker.save()
 
     def testing_phase(self):
@@ -95,6 +100,11 @@ class Display:
         visual.TextStim(win=self.win, text="+", color=GREEN, pos=[495, 0]).draw()
         self.win.flip()
         Display.delay(FIXATION_DELAY)
+
+    def description_page(self, txt):
+        visual.TextStim(win=self.win, text=txt, color=GREEN, alignHoriz="center", alignVert="center").draw()
+        self.win.flip()
+        return event.waitKeys(keyList=["space"])
 
     def random_dot_motion(self):
         clock = core.Clock()
