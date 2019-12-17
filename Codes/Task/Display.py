@@ -14,87 +14,93 @@ from Codes.Task.Utils.GlobalValues import IMAGE_PATH, \
 
 
 class Display:
-    def __init__(self, one_direction_prob, n_trials, n_test_trials, n_dots=400, move_diff=10):
-        self.n_trials = n_trials
-        self.n_test_trials = n_test_trials
-        self.n_dots = n_dots
-        self.move_diff = move_diff
-        self.one_direction_prob = one_direction_prob
+    def __init__(self):
+        # self.n_trials = n_trials
+        # self.n_test_trials = n_test_trials
+        # self.n_dots = n_dots
+        # self.move_diff = move_diff
+        # self.one_direction_prob = one_direction_prob
         self.win = None
-        self.tracker = Tracker()
-        self.dots = []
-        self.starting_dir_prob = STARTING_DIR_PROB
+        # self.tracker = Tracker()
+        # self.dots = []
+        # self.starting_dir_prob = STARTING_DIR_PROB
         self.central_circle = None
 
-    def run_task(self):
-        self.user_info_page()
-        self.win = visual.Window(fullscr=True, units="pix", color=BLACK)
-        self.central_circle = visual.Circle(self.win, lineColor='white', lineWidth=4., radius=STIMULI_RADIUS)
-        self.description_page("Press Space when you are ready")
-        self.testing_phase()
-        self.description_page("From now, you will receive rewards, Press space when you are ready to start this part")
-        self.training_phase()
-        self.description_page("Here is the last part. you won't receive rewards any more, Press space to start")
-        self.testing_phase()
+    def initial_main_objects(self, win, circle):
+        self.win = win
+        self.central_circle = circle
+
+    def thanks_page(self):
+        # self.user_info_page()
+        # self.win = visual.Window(fullscr=True, units="pix", color=BLACK)
+        # self.central_circle = visual.Circle(self.win, lineColor='white', lineWidth=4., radius=STIMULI_RADIUS)
+        # self.description_page("Press Space when you are ready")
+        # self.testing_phase()
+        # self.description_page("From now, you will receive rewards, Press space when you are ready to start this part")
+        # self.training_phase()
+        # self.description_page("Here is the last part. you won't receive rewards any more, Press space to start")
+        # self.testing_phase()
         visual.TextStim(win=self.win, text="thanks :)", color=GREEN, pos=[495, 0]).draw()
         self.win.flip()
-        self.tracker.save()
+        # self.tracker.save()
 
-    def testing_phase(self):
-        for _ in range(self.n_test_trials):
-            self.run_trial()
-        self.starting_dir_prob = self.tracker.get_training_start_dir_prob()
+    # def testing_phase(self, n_test_trials):
+        # for _ in range(n_test_trials):
+        #     self.run_trial()
+        # self.starting_dir_prob = self.tracker.get_training_start_dir_prob()
 
-    def training_phase(self):
-        for indx in range(self.n_trials):
-            self.run_trial()
-            self.give_reward(N_TEST_TRIALS+indx)
+    # def training_phase(self):
+    #     for indx in range(self.n_trials):
+    #         self.run_trial()
+    #         self.give_reward(N_TEST_TRIALS+indx)
 
-    def run_trial(self):
-        self.initial_dots()
+    def run_trial(self, task_instance):
+        # self.initial_dots()
         self.fixation()
-        self.random_dot_motion()
+        self.random_dot_motion(task_instance)
         selected = self.select_direction()
         confidence = self.get_confidence()
-        self.send_to_tracker(selected[0], confidence[0], self.one_direction_prob)
-        self.tracker.staircase(STAIR_STEP, self)
 
-    def initial_dots(self):
-        trial_direction = Dir.Right if random.random() < RIGHT_PROB else Dir.Left
-        self.dots = []
-        for _ in range(self.n_dots):
-            x, y = self.renew_dot()
-            self.dots.append(Dot([x, y], one_direction_prob=self.one_direction_prob, selected_dir=trial_direction))
+        return selected[0], confidence[0]
+        # self.send_to_tracker(selected[0], confidence[0], self.one_direction_prob)
+        # self.tracker.staircase(STAIR_STEP, self)
 
-    def renew_dot(self):
-        while True:
-            x, y = random.uniform(-150, 150), random.uniform(-150, 150)
-            if self.central_circle.contains(x, y):
-                return [x, y]
+    # def initial_dots(self):
+    #     trial_direction = Dir.Right if random.random() < RIGHT_PROB else Dir.Left
+    #     self.dots = []
+    #     for _ in range(self.n_dots):
+    #         x, y = self.renew_dot()
+    #         self.dots.append(Dot([x, y], one_direction_prob=self.one_direction_prob, selected_dir=trial_direction))
 
-    def give_reward(self, trial_index):
-        trial_info = self.tracker.get_trial_info(trial_index)
-        critic = self.tracker.get_critic()
-        reward = 0
+    # def renew_dot(self):
+    #     while True:
+    #         x, y = random.uniform(-150, 150), random.uniform(-150, 150)
+    #         if self.central_circle.contains(x, y):
+    #             return [x, y]
 
-        if critic == 'Performance':
-            reward = Rewarder.difficulty_reward(trial_info.one_direction_prob)
-        elif critic == 'Meta':
-            reward = Rewarder.meta_reward(
-                trial_info.user_answer, trial_info.correct_answer, trial_info.user_confidence
-            )
-        elif critic == 'Confidence':
-            reward = Rewarder.confidence_reward(trial_info.user_confidence)
+    def give_reward(self, reward):
+        # trial_info = self.tracker.get_trial_info(trial_index)
+        # critic = self.tracker.get_critic()
+        # reward = 0
+        #
+        # if critic == 'Performance':
+        #     reward = Rewarder.difficulty_reward(trial_info.one_direction_prob)
+        # elif critic == 'Meta':
+        #     reward = Rewarder.meta_reward(
+        #         trial_info.user_answer, trial_info.correct_answer, trial_info.user_confidence
+        #     )
+        # elif critic == 'Confidence':
+        #     reward = Rewarder.confidence_reward(trial_info.user_confidence)
 
         visual.TextStim(win=self.win, text=str(int(reward*100)), color=GREEN, pos=[495, 0]).draw()
         self.win.flip()
         Display.delay(REWARD_DELAY)
 
-    def send_to_tracker(self, selected, confidence, one_direction_prob):
-        answer = Tracker.majority_voting(self.dots, self.central_circle)
-        selected = Dir.Right if selected == "right" else Dir.Left
-        confidence = int(confidence)
-        self.tracker.add_trial_info(answer, selected, confidence, one_direction_prob)
+    # def send_to_tracker(self, selected, confidence, one_direction_prob):
+    #     answer = Tracker.majority_voting(self.dots, self.central_circle)
+    #     selected = Dir.Right if selected == "right" else Dir.Left
+    #     confidence = int(confidence)
+    #     self.tracker.add_trial_info(answer, selected, confidence, one_direction_prob)
 
     def fixation(self):
         visual.TextStim(win=self.win, text="+", color=GREEN, pos=[495, 0]).draw()
@@ -104,33 +110,31 @@ class Display:
     def description_page(self, txt):
         visual.TextStim(win=self.win, text=txt, color=GREEN, alignHoriz="center", alignVert="center").draw()
         self.win.flip()
-        return event.waitKeys(keyList=["space"])
+        event.waitKeys(keyList=["space"])
 
-    def random_dot_motion(self):
+    def random_dot_motion(self, task_instance):
         clock = core.Clock()
         while clock.getTime() < STIMULUS_TIME:
             self.central_circle.draw()
-            for i, dot in enumerate(self.dots):
-                # TODO: what to do? what not to do?
-                dot.xy = dot.xy if self.central_circle.contains(dot.xy[0], dot.xy[1]) else self.renew_dot()
+            dots = task_instance.update_dots()
             visual.ElementArrayStim(
                 win=self.win,
-                nElements=self.n_dots,
+                nElements=len(dots),
                 elementTex=None,
                 elementMask="gauss",
-                xys=[dot.xy for dot in self.dots],
+                xys=[dot.xy for dot in dots],
                 sizes=15,
                 colors=WHITE,
             ).draw()
             self.win.flip()
-            self.move_dots()
+            task_instance.move_dots()
 
-    def move_dots(self):
-        for dot in self.dots:
-            if dot.move_direction == Dir.Right:
-                dot.xy[0] += random.random() * self.move_diff
-            else:
-                dot.xy[0] -= random.random() * self.move_diff
+    # def move_dots(self):
+    #     for dot in self.dots:
+    #         if dot.move_direction == Dir.Right:
+    #             dot.xy[0] += random.random() * self.move_diff
+    #         else:
+    #             dot.xy[0] -= random.random() * self.move_diff
 
     def select_direction(self):
         visual.TextStim(
@@ -175,15 +179,15 @@ class Display:
         user_page.addField('Critic:', choices=['Performance', 'Meta', 'Confidence'])
         data = user_page.show()
         if user_page.OK:
-            self.tracker.add_user_info(data[0], data[1], data[2], data[3], data[4])
+            return data[0], data[1], data[2], data[3], data[4]
         else:
            sys.exit()
 
-    def change_dir_probability(self, diff):
-        if diff < 0:
-            self.one_direction_prob = max(self.one_direction_prob + diff, 0.54)
-        else:
-            self.one_direction_prob += diff
+    # def change_dir_probability(self, diff):
+    #     if diff < 0:
+    #         self.one_direction_prob = max(self.one_direction_prob + diff, 0.54)
+    #     else:
+    #         self.one_direction_prob += diff
 
     @staticmethod
     def delay(ms):

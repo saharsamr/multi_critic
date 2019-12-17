@@ -71,7 +71,6 @@ class AnalyseData:
 
     def rewards(self, critic, bin_size=1, start_inx=N_TEST_TRIALS, end_inx=N_TRIALS+N_TEST_TRIALS):
         rewards = None
-        print(self.critic)
 
         if critic == 'Meta':
             rewards = [Rewarder.meta_reward(trial.user_answer, trial.correct_answer, int(trial.user_confidence))
